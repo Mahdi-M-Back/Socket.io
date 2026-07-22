@@ -1,15 +1,14 @@
 import jwt from "jsonwebtoken";
-import { env } from "./env.js";
 import userRepo from "./../module/user/repository.js";
 
 const accessToken = (userId) => {
-  const expiresIn = env.jwt.accessTokenExpiresIn;
-  return jwt.sign({ userId }, env.jwt.accessTokenSecret, { expiresIn });
+  const expiresIn = process.env.JWT_SECRET_ACCESS_EXPIRES_IN;
+  return jwt.sign({ userId }, process.env.JWT_SECRET_ACCESS, { expiresIn });
 };
 
 const refreshToken = (userId) => {
-  const expiresIn = env.jwt.refreshTokenExpiresIn;
-  return jwt.sign({ userId }, env.jwt.refreshTokenSecret, { expiresIn });
+  const expiresIn = process.env.JWT_SECRET_REFRESH_EXPIRES_IN;
+  return jwt.sign({ userId }, process.env.JWT_SECRET_REFRESH, { expiresIn });
 };
 
 function generateTokens(userId, res) {
@@ -28,7 +27,7 @@ function generateTokens(userId, res) {
 
 function generateAccessTokens(userId, refreshToken) {
   try {
-    jwt.verify(refreshToken, env.jwt.refreshTokenSecret);
+    jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
     const access = accessToken(userId);
 
     return { access };
@@ -50,7 +49,7 @@ async function protect(req, res, next) {
   let decoded;
   const token = req.headers.authorization.split(" ")[1];
   try {
-    decoded = await jwt.verify(token, env.jwt.accessTokenSecret);
+    decoded = await jwt.verify(token, process.env.JWT_SECRET_ACCESS);
   } catch (error) {
     return res.status(401).json({
       status: "faild",
