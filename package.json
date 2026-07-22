@@ -4,9 +4,17 @@
   "description": "learning socket.io",
   "license": "ISC",
   "author": "always me",
-  "type": "commonjs",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.3",
+    "moment": "^2.30.1"
   }
 }
