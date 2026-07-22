@@ -48,8 +48,8 @@ async function refreshToken(refreshToken) {
   return tokens;
 }
 
-async function update(name, userId) {
-  const updatedUser = await repository.update(name, userId );
+async function update(data, userId) {
+  const updatedUser = await repository.update(data.name, userId );
   if (!updatedUser) {
     return false;
   }

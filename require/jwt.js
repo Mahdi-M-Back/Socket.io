@@ -56,7 +56,7 @@ async function protect(req, res, next) {
       data: "You are not logged in. Please log in to get access.",
     });
   }
-  const currentuser = await authRepo.findById(decoded.userId);
+  const currentuser = await userRepo.findById(decoded.userId);
   if (!currentuser) {
     return res.status(404).json({
       status: "faild",

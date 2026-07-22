@@ -66,7 +66,7 @@ export async function refreshToken(req, res) {
 }
 
 export async function updateMe(req, res) {
-  const update = await service.update(req.body.name, req.userId);
+  const update = await service.update(req.body.name, req.user.id);
   if (!update) {
     return res.status(404).json({
       status: "Fail",
@@ -81,7 +81,7 @@ export async function updateMe(req, res) {
 }
 
 export async function getMe(req, res) {
-  const user = await service.getMe(req.userId);
+  const user = await service.getMe(req.user.id);
   if (!user) {
     return res.status(404).json({
       status: "Fail",
@@ -96,7 +96,7 @@ export async function getMe(req, res) {
 }
 
 export async function deleteMe(req, res) {
-  const deleted = await service.deleteMe(req.userId);
+  const deleted = await service.deleteMe(req.user.id);
   if (!deleted) {
     return res.status(404).json({
       status: "Fail",

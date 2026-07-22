@@ -1,32 +1,37 @@
 import { z } from "zod";
 
-export const registerSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Name must be at least 2 characters.")
-    .max(100, "Name must be at most 100 characters."),
+export const signupSchema = z.object({
+  body: z.object({
+    name: z.string().min(3).max(50),
 
-  email: z.email().trim().toLowerCase(),
+    email: z.string().email(),
 
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters.")
-    .max(72, "Password must be at most 72 characters."),
+    password: z.string().min(8).max(100),
+  }),
+
+  params: z.object({}),
+
+  query: z.object({}),
 });
+
 export const loginSchema = z.object({
-  email: z.email().trim().toLowerCase(),
+  body: z.object({
+    email: z.string().email(),
 
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters.")
-    .max(72, "Password must be at most 72 characters."),
+    password: z.string().min(8),
+  }),
+
+  params: z.object({}),
+
+  query: z.object({}),
 });
 
-export const updateMe = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Name must be at least 2 characters.")
-    .max(100, "Name must be at most 100 characters."),
+export const updateMeSchema = z.object({
+  body: z.object({
+    name: z.string().min(3).max(50).optional(),
+  }),
+
+  params: z.object({}),
+
+  query: z.object({}),
 });
