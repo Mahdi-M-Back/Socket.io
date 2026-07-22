@@ -1,4 +1,4 @@
-import pool from "@/config/database.js";
+import pool from "./../../require/configDB.js";
 
 async function create(data) {
   const result = await pool.query(

@@ -1,6 +1,6 @@
 import app from "./app.js";
 import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
+dotenv.config();
 import { connectToDB } from "./require/configDB.js";
 
 async function bootstrap() {
