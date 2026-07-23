@@ -104,19 +104,22 @@ async function deleteMe(id) {
       is_deleted = true,
       deleted_at = $1,
       refresh_token = null
-      WHERE 
+    WHERE 
       id = $2
-      `,
+      AND
+      is_deleted = false
+    `,
     [new Date(), id],
   );
-  return true ?? null;
+  return result.rowCount > 0;
 }
 
 async function findById(id) {
   const result = await pool.query(
     `
-    SELECT * FROM users
-    WHERE id = $1
+    SELECT id, name, email, is_deleted
+    FROM users
+    WHERE id = $1 AND is_deleted = false
     `,
     [id],
   );
