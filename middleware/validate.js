@@ -10,7 +10,7 @@ const validate = (schema) => {
       return res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors: result.error.errors,
+        errors: result.error.issues,
       });
     }
 
