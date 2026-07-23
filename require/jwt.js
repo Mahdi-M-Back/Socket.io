@@ -25,15 +25,18 @@ function generateTokens(userId, res) {
   return { access, refresh };
 }
 
-function generateAccessTokens(userId, refreshToken) {
-  try {
-    jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
-    const access = accessToken(userId);
+function generateAccessTokens(userId, res) {
+  const access = accessToken(userId);
+  const refresh = refreshToken(userId);
 
-    return { access };
-  } catch (err) {
-    return false;
-  }
+  res.cookie("refreshToken", refresh, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
+  });
+
+  return { access, refresh };
 }
 
 async function protect(req, res, next) {
@@ -49,7 +52,9 @@ async function protect(req, res, next) {
   let decoded;
   const token = req.headers.authorization.split(" ")[1];
   try {
-    decoded = await jwt.verify(token, process.env.JWT_SECRET_ACCESS);
+    decoded = await jwt.verify(token, process.env.JWT_SECRET_ACCESS, {
+      algorithms: ["HS256"],
+    });
   } catch (error) {
     return res.status(401).json({
       status: "faild",
