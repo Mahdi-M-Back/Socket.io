@@ -8,14 +8,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       default: pgm.func("gen_random_uuid()"),
     },
 
-    name: {
+    userName: {
       type: "varchar(100)",
-    },
-
-    email: {
-      type: "varchar(255)",
-      notNull: true,
-      unique: true,
     },
 
     password: {
