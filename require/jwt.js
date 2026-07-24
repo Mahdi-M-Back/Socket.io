@@ -24,7 +24,6 @@ function generateTokens(userId, res) {
 
   return { access, refresh };
 }
-
 function generateAccessTokens(userId, res) {
   const access = accessToken(userId);
   const refresh = refreshToken(userId);
@@ -45,8 +44,9 @@ async function protect(req, res, next) {
     !req.headers.authorization.startsWith("Bearer")
   ) {
     return res.status(401).json({
-      status: "faild",
-      data: "Unauthorized access.",
+      success: false,
+      message: "Unauthorized access.",
+      data: null,
     });
   }
   let decoded;
@@ -57,28 +57,30 @@ async function protect(req, res, next) {
     });
   } catch (error) {
     return res.status(401).json({
-      status: "faild",
-      data: "You are not logged in. Please log in to get access.",
+      success: false,
+      message: "You are not logged in. Please log in to get access.",
+      data: null,
     });
   }
   const currentuser = await userRepo.findById(decoded.userId);
   if (!currentuser) {
     return res.status(404).json({
-      status: "faild",
-      data: "User not found.",
+      success: false,
+      message: "User not found.",
+      data: null,
     });
   }
 
   req.user = currentuser;
   next();
 }
-
 function restrictTo(...roles) {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
-        status: "faild",
-        data: "You are not authorized to perform this action.",
+        success: false,
+        message: "You are not authorized to perform this action.",
+        data: null,
       });
     }
     next();
