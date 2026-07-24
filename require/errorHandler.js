@@ -1,12 +1,22 @@
-const errorHandler = (err, req, res, next) => {
-  console.error(err);
+import logger from "./logger.js";
 
-  const statusCode = err.statusCode || 500;
+export default function errorHandler(err, req, res, next) {
+  logger.error({ err }, "Request error");
+  if (res.headersSent) {
+    return next(err);
+  }
 
-  res.status(statusCode).json({
+  if (err.code === "23505") {
+    return res.status(409).json({
+      success: false,
+      message: "User already exists.",
+    });
+  }
+
+  const isOperational = err.isOperational === true;
+
+  res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: isOperational ? err.message : "Internal Server Error",
   });
-};
-
-export default errorHandler;
+}
