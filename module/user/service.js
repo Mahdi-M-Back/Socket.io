@@ -1,30 +1,26 @@
 import jwt from "./../../require/jwt.js";
 import repository from "./repository.js";
-import { loginSchema, registerSchema } from "./schema.js";
 import bcrypt from "bcrypt";
 
 async function create(data) {
-  const validated = registerSchema.parse(data);
-  const existingUser = await repository.findByEmail(validated.email);
+  const existingUser = await repository.findByEmail(data.email);
   if (existingUser) {
     return false;
   }
-  const password = await bcrypt.hash(validated.password, 12);
-  validated.password = password;
-  const user = await repository.create(validated);
+  const password = await bcrypt.hash(data.password, 12);
+  data.password = password;
+  const user = await repository.create(data);
 
   return user;
 }
 
 async function login(data, res) {
-  const validated = loginSchema.parse(data);
-
-  const user = await repository.findByEmail(validated.email);
+  const user = await repository.findByEmail(data.email);
   if (!user) {
     return false;
   }
 
-  const confirmPass = await bcrypt.compare(validated.password, user.password);
+  const confirmPass = await bcrypt.compare(data.password, user.password);
   if (!confirmPass) {
     return false;
   }
@@ -37,13 +33,14 @@ async function login(data, res) {
   return { user, accessToken };
 }
 
-async function refreshToken(refreshToken) {
+async function refreshToken(refreshToken, res) {
   const user = await repository.findByRefreshToken(refreshToken);
   if (!user) {
     return false;
   }
 
-  const tokens = await jwt.generateAccessTokens(user.id, refreshToken);
+  const tokens = await jwt.generateAccessTokens(user.id, res);
+  await repository.updateRefreshToken(user.id, tokens.refresh);
 
   return tokens;
 }
