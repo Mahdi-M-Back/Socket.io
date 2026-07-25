@@ -3,7 +3,7 @@ import repository from "./repository.js";
 import bcrypt from "bcrypt";
 
 async function create(data) {
-  const existingUser = await repository.findByEmail(data.email);
+  const existingUser = await repository.findByUserName(data.userName);
   if (existingUser) {
     return false;
   }
@@ -15,7 +15,7 @@ async function create(data) {
 }
 
 async function login(data, res) {
-  const user = await repository.findByEmail(data.email);
+  const user = await repository.findByUserName(data.userName);
   if (!user) {
     return false;
   }
@@ -46,12 +46,13 @@ async function refreshToken(refreshToken, res) {
 }
 
 async function update(data, userId) {
-  const updatedUser = await repository.update(data.name, userId );
+  const updatedUser = await repository.update(data, userId);
   if (!updatedUser) {
     return false;
   }
   return updatedUser;
 }
+
 async function getMe(userId) {
   const user = await repository.getMe(userId);
   if (!user) {
@@ -59,6 +60,7 @@ async function getMe(userId) {
   }
   return user;
 }
+
 async function deleteMe(userId) {
   const deleteUser = await repository.deleteMe(userId);
   if (!deleteUser) {
