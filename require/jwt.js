@@ -24,6 +24,7 @@ function generateTokens(userId, res) {
 
   return { access, refresh };
 }
+
 function generateAccessTokens(userId, res) {
   const access = accessToken(userId);
   const refresh = refreshToken(userId);
