@@ -6,7 +6,7 @@ export default function errorHandler(err, req, res, next) {
     return next(err);
   }
 
-  if (err.code === "23505") {
+  if (err.code === "P2002") {
     return res.status(409).json({
       success: false,
       message: "User already exists.",
