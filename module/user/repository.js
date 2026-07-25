@@ -1,134 +1,108 @@
-import pool from "./../../require/configDB.js";
+import prisma from "./../../require/prisma.js";
 
 async function create(data) {
-  const result = await pool.query(
-    `
-    INSERT INTO users(name,email,password)
-    VALUES($1,$2,$3)
-    RETURNING 
-    id,
-    name,
-    email
-    `,
-    [data.name, data.email, data.password],
-  );
+  const user = await prisma.user.create({
+    data: {
+      userName: data.userName,
+      password: data.password,
+    },
+    select: {
+      id: true,
+      name: true,
+      userName: true,
+    },
+  });
 
-  return result.rows[0];
+  return user;
 }
 
-async function findByEmail(email) {
-  const result = await pool.query(
-    `
-    SELECT 
-    id,
-    name,
-    email,
-    password
-    FROM users
-    WHERE email = $1
-    `,
-    [email],
-  );
-
-  return result.rows[0] ?? null;
+async function findByUserName(userName) {
+  return prisma.user.findUnique({
+    where: { userName },
+    select: {
+      id: true,
+      userName: true,
+      password: true,
+    },
+  });
 }
 
 async function findByRefreshToken(refreshToken) {
-  const result = await pool.query(
-    `
-    SELECT 
-    id
-    FROM users
-    WHERE refresh_token = $1 AND is_deleted = false
-    `,
-    [refreshToken],
-  );
-
-  return result.rows[0] ?? null;
+  return prisma.user.findFirst({
+    where: {
+      refreshToken,
+      isDeleted: false,
+    },
+    select: {
+      id: true,
+    },
+  });
 }
 
 async function updateRefreshToken(userId, refreshToken) {
-  const result = await pool.query(
-    `
-    UPDATE users
-    SET refresh_token = $1
-    WHERE id = $2
-    `,
-    [refreshToken, userId],
-  );
-  return result.rows[0] ?? null;
+  const result = await prisma.user.updateMany({
+    where: { id: userId, isDeleted: false },
+    data: { refreshToken },
+  });
+  return result.count > 0;
 }
 
-async function update(name, id) {
-  const result = await pool.query(
-    `UPDATE users
-    SET 
-      name = $1,
-      updated_at = $2
-    WHERE 
-      id = $3
-      AND
-      is_deleted = false
-    RETURNING 
-    name,
-    email
-    `,
-    [name, new Date(), id],
-  );
-
-  return result.rows[0] ?? null;
+async function update(data, id) {
+  try {
+    const user = await prisma.user.update({
+      where: { id, isDeleted: false },
+      data: {
+        userName: data.userName,
+        updatedAt: new Date(),
+      },
+      select: {
+        userName: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    if (error.code === "P2025") {
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function getMe(id) {
-  const result = await pool.query(
-    `
-    SELECT 
-      name,
-      email
-    FROM users
-    WHERE 
-      is_deleted = false 
-      AND 
-      id = $1
-    `,
-    [id],
-  );
-  return result.rows[0] ?? null;
+  return prisma.user.findFirst({
+    where: { id, isDeleted: false },
+    select: {
+      userName: true,
+    },
+  });
 }
 
 async function deleteMe(id) {
-  const result = await pool.query(
-    `
-    UPDATE users
-    SET 
-      is_deleted = true,
-      deleted_at = $1,
-      refresh_token = null
-    WHERE 
-      id = $2
-      AND
-      is_deleted = false
-    `,
-    [new Date(), id],
-  );
-  return result.rowCount > 0;
+  const result = await prisma.user.updateMany({
+    where: { id, isDeleted: false },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+      refreshToken: null,
+    },
+  });
+  return result.count > 0;
 }
 
 async function findById(id) {
-  const result = await pool.query(
-    `
-    SELECT id, name, email, is_deleted
-    FROM users
-    WHERE id = $1 AND is_deleted = false
-    `,
-    [id],
-  );
-  return result.rows[0] ?? null;
+  return prisma.user.findFirst({
+    where: { id, isDeleted: false },
+    select: {
+      id: true,
+      userName: true,
+      isDeleted: true,
+    },
+  });
 }
 
 export default {
   create,
-  findByEmail,
+  findByUserName,
   findByRefreshToken,
   updateRefreshToken,
   update,
