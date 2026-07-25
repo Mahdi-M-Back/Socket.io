@@ -1,37 +1,62 @@
 import express from "express";
-import cookieParser from "cookie-parser";
-const app = express();
 import cors from "cors";
-import router from "./routes.js";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import pinoHttp from "pino-http";
+import { generalLimiter } from "./middleware/rateLimiters.js";
+import routes from "./routes.js";
 import errorHandler from "./require/errorHandler.js";
-import rateLimit from "express-rate-limit";
+import logger from "./require/logger.js";
+
+const app = express();
+app.set("trust proxy", process.env.TRUST_PROXY_HOPS ?? 1);
 
 app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
-    credentials: true,
-  }),
-);
-
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 200,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      message: "Too many requests, please try again later.",
+  pinoHttp({
+    logger,
+    serializers: {
+      req: (req) => ({ method: req.method, url: req.url }),
+      res: (res) => ({ statusCode: res.statusCode }),
+    },
+    customSuccessMessage: (req, res) =>
+      `${req.method} ${req.url} -> ${res.statusCode}`,
+    customErrorMessage: (req, res, err) =>
+      `${req.method} ${req.url} -> ${res.statusCode} (${err.message})`,
+    autoLogging: {
+      ignore: (req) => req.url?.startsWith("/api/health"),
+    },
+    redact: {
+      paths: [
+        "req.headers.authorization",
+        "req.headers.cookie",
+        "req.body.password",
+      ],
+      remove: true,
     },
   }),
 );
 
-app.use(cookieParser());
-app.use(express.json());
 app.use(helmet());
 
-app.use("/api", router);
+const allowedOrigins = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
+
+app.use(generalLimiter);
+
+app.use(cookieParser());
+app.use(express.json({ limit: "10kb" }));
+
+app.use("/api", routes);
 
 app.use(errorHandler);
+
 export default app;
